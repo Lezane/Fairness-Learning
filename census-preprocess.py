@@ -56,12 +56,7 @@ def preprocess_adult_data(file_path=None):
     # Convert masks to tensors
     l0_mask_tensor = torch.tensor(l0_mask.values)
 
-    # Save the PyTorch tensors to files
-    torch.save(X, 'features.pt')
-    torch.save(y_tensor, 'target.pt')
-    torch.save(l0_mask_tensor, 'l0_mask.pt')
-
-    print("Tensors saved as features.pt, target.pt, l0_mask.pt")
+    
 
 
     # Set a random seed for reproducibility
@@ -94,12 +89,22 @@ def preprocess_adult_data(file_path=None):
     y_val = y_tensor[val_indices]
     l0_mask_val = l0_mask_tensor[val_indices]
 
+    # Save the PyTorch tensors to files
+    torch.save(X_train, 'features_train.pt')
+    torch.save(y_train, 'target_train.pt')
+    torch.save(l0_mask_train, 'l0_mask_train.pt')
+    torch.save(X_val, 'features_val.pt')
+    torch.save(y_val, 'target_val.pt')
+    torch.save(l0_mask_val, 'l0_mask_val.pt')
+
+    print("Tensors saved as features_train, target_train.pt, l0_mask_train.pt features_val.pt target_val.pt l0_mask_val.pt")
+
     return X_train, y_train, l0_mask_train, X_val, y_val, l0_mask_val
 
 if __name__ == '__main__':
     print("Running preprocessing script...")
-
-    X_train, y_train, l0_mask_train, X_val, y_val, l0_mask_val = preprocess_adult_data()
+    
+    X_train, y_train, l0_mask_train, X_val,y_val, l0_mask_val = preprocess_adult_data()
     print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
     print(f"L0_mask_train shape: {l0_mask_train.shape}")
     print(f"X_val shape: {X_val.shape}, y_val shape: {y_val.shape}")
