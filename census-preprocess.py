@@ -94,12 +94,12 @@ def preprocess_adult_data(file_path=None):
     y_val = y_tensor[val_indices]
     l0_mask_val = l0_mask_tensor[val_indices]
 
-    return X_train, y_train, l0_mask_train, l1_mask_tensor, X_val,y_val, l0_mask_val
+    return X_train, y_train, l0_mask_train, X_val, y_val, l0_mask_val
 
 if __name__ == '__main__':
     print("Running preprocessing script...")
 
-    X_train, y_train, l0_mask_train, l1_mask_tensor, X_val,y_val, l0_mask_val = preprocess_adult_data()
+    X_train, y_train, l0_mask_train, X_val, y_val, l0_mask_val = preprocess_adult_data()
     print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
     print(f"L0_mask_train shape: {l0_mask_train.shape}")
     print(f"X_val shape: {X_val.shape}, y_val shape: {y_val.shape}")
