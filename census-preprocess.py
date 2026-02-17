@@ -55,21 +55,52 @@ def preprocess_adult_data(file_path=None):
 
     # Convert masks to tensors
     l0_mask_tensor = torch.tensor(l0_mask.values)
-    l1_mask_tensor = torch.tensor(l1_mask.values)
 
     # Save the PyTorch tensors to files
     torch.save(X, 'features.pt')
     torch.save(y_tensor, 'target.pt')
     torch.save(l0_mask_tensor, 'l0_mask.pt')
-    torch.save(l1_mask_tensor, 'l1_mask.pt')
 
-    print("Tensors saved as features.pt, target.pt, l0_mask.pt, and l1_mask.pt")
+    print("Tensors saved as features.pt, target.pt, l0_mask.pt")
 
-    return X, y_tensor, l0_mask_tensor, l1_mask_tensor
+
+    # Set a random seed for reproducibility
+    torch.manual_seed(42)
+
+    # Determine the size of the dataset
+    dataset_size = X.shape[0]
+
+    # Define the split ratios
+    train_ratio = 0.9
+    val_ratio = 0.1
+
+    # Calculate the number of samples for each set
+    train_size = int(train_ratio * dataset_size)
+    val_size = dataset_size - train_size
+
+    # Generate random indices for splitting
+    indices = torch.randperm(dataset_size)
+
+    # Split the indices
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:]
+
+    # Split the data, target, and masks into training and validation sets
+    X_train = X[train_indices]
+    y_train = y_tensor[train_indices]
+    l0_mask_train = l0_mask_tensor[train_indices]
+
+    X_val = X[val_indices]
+    y_val = y_tensor[val_indices]
+    l0_mask_val = l0_mask_tensor[val_indices]
+
+    return X_train, y_train, l0_mask_train, l1_mask_tensor, X_val,y_val, l0_mask_val
 
 if __name__ == '__main__':
     print("Running preprocessing script...")
-    
-    X, y_tensor, l0_mask_tensor, l1_mask_tensor = preprocess_adult_data()
-    print(f"Final X shape: {X.shape}")
-    print(f"Final y shape: {y_tensor.shape}")
+
+    X_train, y_train, l0_mask_train, l1_mask_tensor, X_val,y_val, l0_mask_val = preprocess_adult_data()
+    print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+    print(f"L0_mask_train shape: {l0_mask_train.shape}")
+    print(f"X_val shape: {X_val.shape}, y_val shape: {y_val.shape}")
+    print(f"L0_mask_val shape: {l0_mask_val.shape}")
