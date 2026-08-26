@@ -2,31 +2,32 @@
 ```text
 project_root/
 │
-├── requirements.txt      # Dependencies
-├── main.py               # CLI entry point to run experiments
+├── requirements.txt      
+├── main.py               # (UPDATED)
 │
-├── data/                 # Dataset loaders
+├── data/                 
 │   ├── __init__.py
-│   ├── cifar.py          # CIFAR-10 / CIFAR-100 loaders
-│   └── covertype.py      # Forest Covertype tabular data loader
+│   ├── cifar.py
+│   └── covertype.py
 │
-├── models/               # Neural network architectures
+├── models/               
 │   ├── __init__.py
-│   ├── cifar.py          # ResNet10, VGG19-bn
-│   └── tabular.py        # MLP, FT-Transformer
+│   ├── cifar.py          
+│   └── tabular.py        
 │
-├── optimizers/           # Optimizer logic and hyperparameters
+├── optimizers/           
 │   ├── __init__.py
-│   ├── muon.py           # Custom Muon implementation
-│   ├── config.py         # Hyperparameter sets A and B
-│   └── factory.py        # Factory function to build optimizers
+│   ├── muon.py           
+│   ├── config.py         
+│   └── factory.py        
 │
-└── utils/                # Training loop, metrics, and plotting
+└── utils/                
     ├── __init__.py
-    ├── seed.py           # Seed setting for reproducibility
-    ├── metrics.py        # Accuracy tracking and loss calculation
-    ├── trainer.py        # Main training loop
-    └── logger.py         # Plotting and summary tables
+    ├── seed.py           
+    ├── metrics.py        
+    ├── trainer.py        # (UPDATED)
+    ├── logger.py         
+    └── storage.py        # <--- NEW: Server-safe data storage
 
 Example of commands
 
