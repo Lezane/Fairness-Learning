@@ -29,6 +29,9 @@ project_root/
     ├── logger.py         
     └── storage.py        # <--- NEW: Server-safe data storage
 
+rtdl needs be installed with non dependence
+pip install rtdl --no-deps
+
 Example of commands
 
 For the Covertype Experience (Set A):
