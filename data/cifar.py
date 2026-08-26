@@ -4,7 +4,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from datasets import load_dataset
 
 def get_cifar10_dataloaders(batch_size, imbalance_factor, random_seed):
-    hf_dataset = load_dataset("uoft-cs/cifar10")
+    # Force Hugging Face to cache inside your project folder
+    hf_dataset = load_dataset("uoft-cs/cifar10", cache_dir="./data")
     
     def create_dataset(train=True):
         raw_set = hf_dataset['train' if train else 'test']
