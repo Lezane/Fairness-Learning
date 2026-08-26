@@ -1,0 +1,9 @@
+torch>=2.0.0
+torchvision
+scikit-learn
+pandas
+matplotlib
+numpy
+datasets
+rtdl
+tabulate
