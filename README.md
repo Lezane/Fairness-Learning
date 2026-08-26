@@ -1,3 +1,6 @@
+
+
+```text
 project_root/
 │
 ├── requirements.txt      # Dependencies
@@ -5,8 +8,8 @@ project_root/
 │
 ├── data/                 # Dataset loaders
 │   ├── __init__.py
-│   ├── cifar.py
-│   └── covertype.py
+│   ├── cifar.py          # CIFAR-10 / CIFAR-100 loaders
+│   └── covertype.py      # Forest Covertype tabular data loader
 │
 ├── models/               # Neural network architectures
 │   ├── __init__.py
@@ -21,7 +24,7 @@ project_root/
 │
 └── utils/                # Training loop, metrics, and plotting
     ├── __init__.py
-    ├── seed.py           # Seed setting
-    ├── metrics.py        # Accuracy tracking
+    ├── seed.py           # Seed setting for reproducibility
+    ├── metrics.py        # Accuracy tracking and loss calculation
     ├── trainer.py        # Main training loop
     └── logger.py         # Plotting and summary tables
