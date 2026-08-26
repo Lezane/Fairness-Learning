@@ -12,7 +12,8 @@ class TabularDataset(Dataset):
     def __getitem__(self, idx): return self.x_num[idx], self.x_cat[idx], self.y[idx], self.s0[idx]
 
 def get_covertype_dataloaders(batch_size, random_seed):
-    df = fetch_covtype(as_frame=True).frame
+    # Force scikit-learn to cache inside your project folder
+    df = fetch_covtype(data_home='./data', as_frame=True).frame
     df['target_bin'] = (df['Cover_Type'] == 2).astype(int)
     
     w_cols = [c for c in df.columns if 'Wilderness' in c]
