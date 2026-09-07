@@ -14,14 +14,10 @@ from utils.logger import plot_k_runs_variance, print_summary_table
 from utils.storage import ExperimentRecorder
 from optimizers.factory import get_optimizers
 
-# -------------------------------------------------------------
-# UPDATE THESE IMPORTS TO MATCH YOUR NEW FOLDER NAMES:
-# Replace "my_data" and "my_models" with the actual names you chose.
-# -------------------------------------------------------------
-from my_data.cifar import get_cifar10_dataloaders
-from my_data.covertype import get_covertype_dataloaders
-from my_models.cifar import get_cifar10_model
-from my_models.tabular import FTTransformerWrapper, MLPWrapper
+from data.cifar import get_cifar10_dataloaders
+from data.covertype import get_covertype_dataloaders
+from models.cifar import get_cifar10_model
+from models.tabular import FTTransformerWrapper, MLPWrapper
 # -------------------------------------------------------------
 
 def main():
