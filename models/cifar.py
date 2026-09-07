@@ -3,7 +3,6 @@ import torch.nn as nn
 from torchvision.models import vgg19_bn
 import config  # <--- Added config import
 
-# ... [BasicBlock & ResNet classes remain unchanged here] ...
 
 def get_cifar10_model(arch, device):
     num_classes = 9
