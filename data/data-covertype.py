@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import fetch_covtype
+import config  # <--- Added config import
 
 class TabularDataset(Dataset):
     def __init__(self, x_num, x_cat, y, s0): 
@@ -13,7 +14,7 @@ class TabularDataset(Dataset):
 
 def get_covertype_dataloaders(batch_size, random_seed):
     # Force scikit-learn to cache inside your project folder
-    df = fetch_covtype(data_home='./data', as_frame=True).frame
+    df = fetch_covtype(data_home=config.DATA_CACHE_DIR, as_frame=True).frame
     df['target_bin'] = (df['Cover_Type'] == 2).astype(int)
     
     w_cols = [c for c in df.columns if 'Wilderness' in c]
