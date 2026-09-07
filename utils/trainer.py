@@ -44,7 +44,7 @@ def train_and_track(model, optimizers, trainloader, evalloader, testloader, devi
         # Save current epoch to CSV securely
         recorder.record_epoch(dataset_name, arch, opt_name, run_id, seed, epoch, tr_s0, tr_s1, te_s0, te_s1)
         
-        if epoch % 10 == 0 or epoch == epochs:
-            print(f"[{opt_name} - {run_id}] Epoch {epoch:03d}/{epochs} | Train (S0/S1): {tr_s0:5.1f}/{tr_s1:5.1f} | Test (S0/S1): {te_s0:5.1f}/{te_s1:5.1f}")
+        
+        print(f"[{opt_name} - {run_id}] Epoch {epoch:03d}/{epochs} | Train (S0/S1): {tr_s0:5.1f}/{tr_s1:5.1f} | Test (S0/S1): {te_s0:5.1f}/{te_s1:5.1f}")
             
     return metrics
