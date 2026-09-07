@@ -8,7 +8,8 @@ def plot_k_runs_variance(arch, opt_name, k_runs, epochs, mean_metrics, std_metri
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
     fig.suptitle(f"{arch.upper()} | {opt_name} | k={k_runs} Runs Averaged", fontsize=16, fontweight='bold')
     
-    x = np.arange(epochs + 1)
+    # We dynamically use the length of the arrays instead of "epochs" to prevent dimension errors
+    x = np.arange(len(mean_metrics['train_s0']))
     plots = [
         (0, 0, 'train_s0', 'Train S0 (Minority)', 'tab:blue'),
         (0, 1, 'train_s1', 'Train S1 (Majority)', 'tab:orange'),
@@ -35,27 +36,47 @@ def plot_k_runs_variance(arch, opt_name, k_runs, epochs, mean_metrics, std_metri
 def print_summary_table(dataset, k_runs, epochs, imbalance_factor, arch_results_dict, out_dir):
     rows = []
     for arch, arch_results in arch_results_dict.items():
-        row_early = {'Metric': f'{arch.upper()} - Early Train Accuracy (S0/S1)'}
-        row_final = {'Metric': f'{arch.upper()} - Final Test Accuracy (S0/S1)'}
+        # Setup the rows we want to display for this architecture
+        row_final = {'Metric': f'{arch.upper()} - Avg Final Test Acc (S0 / S1)'}
+        
+        row_ep_train_s0 = {'Metric': f'{arch.upper()} - 1st Ep > 80% Train S0 (Minority)'}
+        row_ep_train_s1 = {'Metric': f'{arch.upper()} - 1st Ep > 80% Train S1 (Majority)'}
+        row_ep_test_s0 = {'Metric': f'{arch.upper()} - 1st Ep > 80% Test S0 (Minority)'}
+        row_ep_test_s1 = {'Metric': f'{arch.upper()} - 1st Ep > 80% Test S1 (Majority)'}
         
         for opt_name in ['AdamW', 'SGD', 'Muon']:
             res = arch_results[opt_name]
+            
+            # CHANGE 2: Calculate the average of the metrics across the `k_runs` at every epoch
             mean_metrics = {k: np.mean(v, axis=0) for k, v in res.items()}
             
-            # Early Accuracy Calculation (avg over epochs 1-50)
-            early_end = min(epochs + 1, 51)
-            early_s0 = np.mean(mean_metrics['train_s0'][1:early_end]) if epochs >= 1 else 0.0
-            early_s1 = np.mean(mean_metrics['train_s1'][1:early_end]) if epochs >= 1 else 0.0
+            # Get the Final Test Accuracy (from the very last recorded epoch)
+            final_test_s0 = mean_metrics['test_s0'][-1] if len(mean_metrics['test_s0']) > 0 else 0.0
+            final_test_s1 = mean_metrics['test_s1'][-1] if len(mean_metrics['test_s1']) > 0 else 0.0
             
-            # Final Test Accuracy (avg over last 20 epochs)
-            final_start = max(1, epochs + 1 - 20)
-            final_s0 = np.mean(mean_metrics['test_s0'][final_start:])
-            final_s1 = np.mean(mean_metrics['test_s1'][final_start:])
+            row_final[opt_name] = f"{final_test_s0:.2f}% / {final_test_s1:.2f}%"
             
-            row_early[opt_name] = f"{early_s0:.2f}% / {early_s1:.2f}%"
-            row_final[opt_name] = f"{final_s0:.2f}% / {final_s1:.2f}%"
+            # CHANGE 3: Helper function to find the exact epoch where accuracy bypasses 80%
+            def get_first_ep_80(metric_array):
+                # np.where returns an array of indices where the condition (> 80.0) is met
+                idx = np.where(np.array(metric_array) > 80.0)[0]
+                
+                # Assume the index maps to the epoch number. (If your code stores Epoch 1 at 
+                # index 0, you could optionally change this to idx[0] + 1)
+                return f"Epoch {idx[0]}" if len(idx) > 0 else "Never"
+
+            # Apply the function to our averaged Majority (S1) and Minority (S0) arrays
+            row_ep_train_s0[opt_name] = get_first_ep_80(mean_metrics['train_s0'])
+            row_ep_train_s1[opt_name] = get_first_ep_80(mean_metrics['train_s1'])
+            row_ep_test_s0[opt_name] = get_first_ep_80(mean_metrics['test_s0'])
+            row_ep_test_s1[opt_name] = get_first_ep_80(mean_metrics['test_s1'])
             
-        rows.extend([row_early, row_final])
+        # Add all rows to our table display in order
+        rows.extend([
+            row_final, 
+            row_ep_train_s0, row_ep_train_s1, 
+            row_ep_test_s0, row_ep_test_s1
+        ])
         
     df = pd.DataFrame(rows).set_index('Metric')
     
