@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from datasets import load_dataset
 import config  # <--- Added config import
 
-def get_cifar10_dataloaders(batch_size, imbalance_factor, random_seed):
+def get_cifar10_dataloaders(batch_size, xi_remove_pct, random_seed):
     # Force Hugging Face to cache inside your project folder
     hf_dataset = load_dataset("uoft-cs/cifar10", cache_dir=config.DATA_CACHE_DIR)
     
@@ -20,8 +20,8 @@ def get_cifar10_dataloaders(batch_size, imbalance_factor, random_seed):
         
         if train:
             keep_planes = int(len(plane_idx) * 0.95)
-            # Apply dynamic imbalance factor (e.g., 5.0 means 5%)
-            keep_cars = int(len(car_idx) * (imbalance_factor / 100.0))
+            # Remove xi % of class 1
+            keep_cars = int(len(car_idx) * ((100.0 - xi_remove_pct) / 100.0))
         else:
             keep_planes, keep_cars = int(len(plane_idx) * 0.50), int(len(car_idx) * 0.50)
             
