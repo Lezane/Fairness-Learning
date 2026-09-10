@@ -1,15 +1,18 @@
 import torch
 import torch.nn as nn
-from torchvision.models import vgg19_bn
+from torchvision.models import vgg19
+from torchvision.models.resnet import ResNet, BasicBlock
 import config  # <--- Added config import
 
 
 def get_cifar10_model(arch, device):
     num_classes = 9
     if arch == 'resnet10':
+        # Now works because ResNet and BasicBlock are imported
         model = ResNet(BasicBlock, [1, 1, 1, 1], num_classes=num_classes)
-    elif arch == 'vgg19_bn':
-        model = vgg19_bn(weights=None, num_classes=num_classes)
+    elif arch == 'vgg19':
+        # Changed from vgg19_bn to vgg19
+        model = vgg19(weights=None, num_classes=num_classes)
         model.avgpool = nn.Identity()
         model.classifier = nn.Linear(512, num_classes)
     else:
