@@ -26,10 +26,13 @@ def main():
     parser.add_argument('--archs', nargs='+', required=True, help="List of architectures to run")
     parser.add_argument('--k_runs', type=int, default=3, help="Run experience k times sequentially.")
     parser.add_argument('--epochs', type=int, default=config.STEPS, help="Epoch count.")
-    parser.add_argument('--imbalance_factor', type=float, default=5.0, help="CIFAR-10 Minor class ratio.")
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--output_dir', type=str, default='./outputs')
+    parser.add_argument('--xi_remove_pct', type=float, default=95.0, help="Percentage of class 1 to remove.")
     args = parser.parse_args()
+    # In the argument parser section:
+
+
 
     device = config.DEVICE
     print(f"Executing natively using device: {device}\n")
@@ -79,7 +82,7 @@ def main():
                 
                 # Init Dataloaders specific to the current optimizer's batch requirements
                 if is_cifar:
-                    train_ldr, eval_ldr, test_ldr = get_cifar10_dataloaders(bs, args.imbalance_factor, seed)
+                    train_ldr, eval_ldr, test_ldr = get_cifar10_dataloaders(bs, args.xi_remove_pct, seed)
                 else:
                     train_ldr, eval_ldr, test_ldr, _, _ = get_covertype_dataloaders(bs, seed)
                 
@@ -100,8 +103,8 @@ def main():
             mean_metrics = {k: np.mean(v, axis=0) for k, v in res.items()}
             std_metrics = {k: np.std(v, axis=0) for k, v in res.items()}
             plot_k_runs_variance(arch, opt_name, args.k_runs, args.epochs, mean_metrics, std_metrics, args.output_dir)
-
-    print_summary_table(args.dataset, args.k_runs, args.epochs, args.imbalance_factor, arch_results_dict, args.output_dir)
+            
+    print_summary_table(args.dataset, args.k_runs, args.epochs, args.xi_remove_pct, arch_results_dict, args.output_dir)
 
 if __name__ == '__main__':
     main()
