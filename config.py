@@ -9,7 +9,7 @@ SEED = 42  # Seed to ensure AdamW and SGD start from the exact same weights
 
 # Training Settings
 TARGET_LENGTH = 1024
-STEPS = 1000
+STEPS = 200
 MAJOR_VOCAB_FRAC = 0.95  # Top 90% most common words
 
 # AdamW Parameters
