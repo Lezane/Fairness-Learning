@@ -14,7 +14,11 @@ def get_split_acc(m, loader, device, is_cifar):
                 outputs = m(x_num, x_cat)
                 
             _, predicted = torch.max(outputs, 1)
-            mask_s0, mask_s1 = (s0_mask == True).cpu().numpy(), (s0_mask == False).cpu().numpy()
+            
+            # --- THE FIX: Swap the True/False assignments ---
+            mask_s1, mask_s0 = (s0_mask == True).cpu().numpy(), (s0_mask == False).cpu().numpy()
+            # ------------------------------------------------
+            
             labels_cpu, predicted_cpu = labels.cpu().numpy(), predicted.cpu().numpy()
 
             total_s0 += mask_s0.sum()
@@ -24,7 +28,7 @@ def get_split_acc(m, loader, device, is_cifar):
 
     return (100 * correct_s0 / total_s0 if total_s0 > 0 else 0.0), (100 * correct_s1 / total_s1 if total_s1 > 0 else 0.0)
 
-
+# ... (keep get_quarter_averages and get_first_iteration_above_k as they are) ...
 
 def get_quarter_averages(accuracy_history):
     """
