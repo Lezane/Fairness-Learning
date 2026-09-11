@@ -9,6 +9,12 @@ MINORITY_CLASS = 1         # 1 = 'car' in CIFAR-10
 REMOVE_PERCENTAGE = 95     # Remove 95% of the car training dataset
 CURRENT_ARCH = 'vgg19_bn'  # Used across ALL optimizers for a fair comparison
 
+# Transformer / Architecture Settings (Used by FT-Transformer)
+INIT_STD = 0.02
+DEPTH = 12
+NUM_HEADS = 12
+EMB_DIM = 768
+
 # Training Settings
 BATCH_SIZE = 256
 NUM_EPOCHS = 200
