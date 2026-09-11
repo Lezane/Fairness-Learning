@@ -7,7 +7,7 @@ import torch.nn as nn
 SEED = 42  # Seed to ensure optimizers start from the exact same weights
 MINORITY_CLASS = 1         # 1 = 'car' in CIFAR-10
 REMOVE_PERCENTAGE = 95     # Remove 95% of the car training dataset
-CURRENT_ARCH = 'vgg19_bn'  # Used across ALL optimizers for a fair comparison
+CURRENT_ARCH = 'vgg19'  # Used across ALL optimizers for a fair comparison
 
 # Transformer / Architecture Settings (Used by FT-Transformer)
 INIT_STD = 0.02
