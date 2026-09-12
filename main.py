@@ -85,9 +85,12 @@ def main():
                     train_ldr, eval_ldr, test_ldr, _, _ = get_covertype_dataloaders(bs, seed)
                 
                 optimizers = get_optimizers(opt_name, model)
+
+                scheduler = CosineAnnealingLR(optimizers, T_max=args.epochs)
                 
+                # UPDATED: Pass the scheduler to train_and_track
                 metrics = train_and_track(
-                    model, optimizers, train_ldr, eval_ldr, test_ldr, device, 
+                    model, optimizers, scheduler, train_ldr, eval_ldr, test_ldr, device, 
                     args.epochs, is_cifar, args.dataset, arch, opt_name, run_idx, seed, recorder
                 )
                 
