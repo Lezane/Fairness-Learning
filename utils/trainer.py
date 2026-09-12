@@ -20,6 +20,7 @@ def train_and_track(model, optimizers, scheduler, trainloader, evalloader, testl
     recorder.record_epoch(dataset_name, arch, opt_name, run_id, seed, 0, tr_s0, tr_s1, te_s0, te_s1)
 
     for epoch in range(1, epochs + 1):
+        # 1. Training Phase
         model.train()
         for batch in trainloader:
             if is_cifar:
@@ -34,7 +35,7 @@ def train_and_track(model, optimizers, scheduler, trainloader, evalloader, testl
             loss.backward()
             for opt in optimizers: opt.step()
 
-        # Track Metrics
+        # 2. Evaluation Phase
         tr_s0, tr_s1 = get_split_acc(model, evalloader, device, is_cifar)
         te_s0, te_s1 = get_split_acc(model, testloader, device, is_cifar)
 
@@ -43,8 +44,9 @@ def train_and_track(model, optimizers, scheduler, trainloader, evalloader, testl
         
         # Save current epoch to CSV securely
         recorder.record_epoch(dataset_name, arch, opt_name, run_id, seed, epoch, tr_s0, tr_s1, te_s0, te_s1)
-        
-        
         print(f"[{opt_name} - {run_id}] Epoch {epoch:03d}/{epochs} | Train (S0/S1): {tr_s0:5.1f}/{tr_s1:5.1f} | Test (S0/S1): {te_s0:5.1f}/{te_s1:5.1f}")
+      
+        # 3. Step the Scheduler
+        scheduler.step()
             
     return metrics
