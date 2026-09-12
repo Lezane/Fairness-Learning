@@ -46,7 +46,8 @@ def train_and_track(model, optimizers, scheduler, trainloader, evalloader, testl
         recorder.record_epoch(dataset_name, arch, opt_name, run_id, seed, epoch, tr_s0, tr_s1, te_s0, te_s1)
         print(f"[{opt_name} - {run_id}] Epoch {epoch:03d}/{epochs} | Train (S0/S1): {tr_s0:5.1f}/{tr_s1:5.1f} | Test (S0/S1): {te_s0:5.1f}/{te_s1:5.1f}")
       
-        # 3. Step the Scheduler
-        scheduler.step()
+        # 3. Step ALL Schedulers
+        for sched in schedulers:
+            sched.step()
             
     return metrics
