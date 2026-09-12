@@ -77,7 +77,6 @@ def main():
                 
                 if args.batch_size is not None:
                     bs = args.batch_size
-                
                 # Init Dataloaders specific to the current optimizer's batch requirements
                 if is_cifar:
                     train_ldr, eval_ldr, test_ldr = get_cifar10_dataloaders(bs, args.imbalance_factor, seed)
@@ -86,11 +85,13 @@ def main():
                 
                 optimizers = get_optimizers(opt_name, model)
 
-                scheduler = CosineAnnealingLR(optimizers, T_max=args.epochs)
+                # Create a list of schedulers, one for each optimizer
+                # They will all follow the exact same cosine annealing curve
+                schedulers = [CosineAnnealingLR(opt, T_max=args.epochs) for opt in optimizers]
                 
-                # UPDATED: Pass the scheduler to train_and_track
+                # UPDATED: Pass the 'schedulers' list to train_and_track
                 metrics = train_and_track(
-                    model, optimizers, scheduler, train_ldr, eval_ldr, test_ldr, device, 
+                    model, optimizers, schedulers, train_ldr, eval_ldr, test_ldr, device, 
                     args.epochs, is_cifar, args.dataset, arch, opt_name, run_idx, seed, recorder
                 )
                 
