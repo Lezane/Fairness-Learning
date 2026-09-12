@@ -18,6 +18,7 @@ from data.cifar import get_cifar10_dataloaders
 from data.covertype import get_covertype_dataloaders
 from models.cifar import get_cifar10_model
 from models.tabular import FTTransformerWrapper, MLPWrapper
+from torch.optim.lr_scheduler import CosineAnnealingLR
 # -------------------------------------------------------------
 
 def main():
