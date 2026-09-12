@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from .metrics import get_split_acc
 
-def train_and_track(model, optimizers, scheduler, trainloader, evalloader, testloader, device, 
+def train_and_track(model, optimizers, schedulers, trainloader, evalloader, testloader, device, 
                     epochs, is_cifar, dataset_name, arch, opt_name, run_idx, seed, recorder):
     criterion = nn.CrossEntropyLoss()
     metrics = {'train_s0': [], 'train_s1': [], 'test_s0': [], 'test_s1': []}
