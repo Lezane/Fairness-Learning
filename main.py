@@ -82,8 +82,8 @@ def main():
                     train_ldr, eval_ldr, test_ldr = get_cifar10_dataloaders(bs, args.imbalance_factor, seed)
                 else:
                     train_ldr, eval_ldr, test_ldr, _, _ = get_covertype_dataloaders(bs, seed)
-                
-                optimizers = get_optimizers(opt_name, model)
+                    
+                optimizers = get_optimizers(opt_name, model, is_cifar)
 
                 # Create a list of schedulers, one for each optimizer
                 # They will all follow the exact same cosine annealing curve
