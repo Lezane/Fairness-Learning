@@ -77,11 +77,11 @@ def get_optimizers(opt_name, model, is_cifar):
         )
         
         opt_adamw = torch.optim.AdamW(
-            adamw_params, 
-            lr=config.MUON_ADAMW_LR, 
-            weight_decay=config.MUON_ADAMW_WD
+            adamw_params,
+            lr=config.MUON_ADAMW_LR,
+            betas=(0.0, 0.0),  # Disable both gradient-history averages
+            weight_decay=config.MUON_ADAMW_WD,
         )
-        
         return [opt_muon, opt_adamw]
 
     else:
