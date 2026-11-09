@@ -1,6 +1,6 @@
 """Additional Covertype MLP experiments; add this file beside the existing main.py.
 
-Runs at most five LR configurations per optimizer, each with exactly five seeds.
+Runs at most five LR configurations per optimizer, each with exactly two seeds.
 No existing repository files or config values are modified. No automatic selection
 on test results: summary.csv reports every configuration for comparison.
 """
@@ -72,7 +72,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch_size', type=int, default=config.BATCH_SIZE)
-    parser.add_argument('--seeds', type=int, nargs=5, default=[42, 43, 44, 45, 46], metavar='SEED')
+    parser.add_argument('--seeds', type=int, nargs=2, default=[42, 43], metavar=('SEED1', 'SEED2'))
     parser.add_argument('--optimizers', nargs='+', choices=list(DEFAULT_LRS), default=list(DEFAULT_LRS))
     parser.add_argument('--adam_lrs', type=float, nargs='+', default=DEFAULT_LRS['AdamW'])
     parser.add_argument('--sgd_lrs', type=float, nargs='+', default=DEFAULT_LRS['SGD'])
@@ -82,8 +82,8 @@ def main():
     parser.add_argument('--output_dir', default=None)
     args = parser.parse_args()
     rates = {'AdamW': args.adam_lrs, 'SGD': args.sgd_lrs, 'Muon': args.muon_lrs}
-    if args.epochs < 1 or args.batch_size < 1 or len(set(args.seeds)) != 5:
-        parser.error('Use positive epochs/batch size and exactly five distinct seeds')
+    if args.epochs < 1 or args.batch_size < 1 or len(set(args.seeds)) != 2:
+        parser.error('Use positive epochs/batch size and exactly two distinct seeds')
     if len(set(args.optimizers)) != len(args.optimizers):
         parser.error('Do not repeat optimizers')
     for name in args.optimizers:
@@ -107,10 +107,10 @@ def main():
         'no_momentum': True, 'schedule': 'cosine, T_max=epochs, eta_min=0',
         'group_definition': 'S0: other samples; S1: designated minority cover type',
         'muon_aux_rule': 'auxiliary_lr = muon_lr * muon_aux_ratio',
-        'total_runs': len(args.seeds) * sum(len(rates[name]) for name in args.optimizers),
+        'total_runs': 2 * sum(len(rates[name]) for name in args.optimizers),
     }, indent=2))
     print(f'Output directory: {out.resolve()}', flush=True)
-    print('All momentum and both AdamW betas are zero. Exactly five seeds per configuration.', flush=True)
+    print('All momentum and both AdamW betas are zero. Exactly two seeds per configuration.', flush=True)
     # Cache each seed's loaders once; shuffle and dropout RNG are reset for every run.
     datasets = {seed: get_covertype_dataloaders(args.batch_size, seed) for seed in args.seeds}
     if any(len(data[0]) == 0 for data in datasets.values()):
@@ -153,7 +153,7 @@ def main():
                     row[metric + '_std'] = statistics.pstdev(values)
                 writer.writerow(row)
                 summary_file.flush()
-                print('Final five-seed summary:', json.dumps(row), flush=True)
+                print('Final two-seed summary:', json.dumps(row), flush=True)
     print(f'Finished. All configurations: {summary_path.resolve()}', flush=True)
 
 
