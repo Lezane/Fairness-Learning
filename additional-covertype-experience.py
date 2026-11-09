@@ -1,4 +1,4 @@
-"""Additional Covertype MLP experiments; add this file beside the existing main.py.
+"""Additional Covertype FT-Transformer/MLP experiments; add this file beside the existing main.py.
 
 Runs at most five LR configurations per optimizer, each with exactly two seeds.
 No existing repository files or config values are modified. No automatic selection
@@ -40,8 +40,15 @@ def make_optimizers(name, model, lr, aux_lr):
             model.parameters(), lr=lr, momentum=0.0, nesterov=False,
             weight_decay=config.SGD_WEIGHT_DECAY)]
     elif name == 'Muon':
-        # Match the repository MLP grouping: hidden weights only on Muon.
-        hidden = [m.weight for m in model.mlp.modules() if isinstance(m, torch.nn.Linear)]
+        # Internal Linear weights use Muon, following the repository factory rule.
+        # All remaining parameters use auxiliary AdamW, including rtdl tokenizer
+        # and CLS parameters that are not ordinary nn.Embedding modules.
+        hidden = [
+            module.weight for module_name, module in model.named_modules()
+            if isinstance(module, torch.nn.Linear)
+            and module.weight is not None
+            and 'head' not in module_name and 'classifier' not in module_name
+        ]
         hidden_ids = {id(p) for p in hidden}
         auxiliary = [p for p in model.parameters() if id(p) not in hidden_ids]
         optimizers = [
@@ -70,6 +77,7 @@ def optimizer_details(optimizers):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--arch', choices=['fttransformer', 'mlp'], default='fttransformer')
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch_size', type=int, default=config.BATCH_SIZE)
     parser.add_argument('--seeds', type=int, nargs=2, default=[42, 43], metavar=('SEED1', 'SEED2'))
@@ -96,9 +104,10 @@ def main():
         parser.error('Muon auxiliary ratio must be finite and positive')
 
     # Reuse the actual repository model without altering its architecture.
-    from models.tabular import MLPWrapper
+    from models.tabular import MLPWrapper, FTTransformerWrapper
+    model_class = FTTransformerWrapper if args.arch == 'fttransformer' else MLPWrapper
 
-    out = Path(args.output_dir or ('./outputs/additional_covertype_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
+    out = Path(args.output_dir or ('./outputs/additional_covertype_' + args.arch + '_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
     if out.exists() and any(out.iterdir()):
         parser.error('Choose a new or empty output directory')
     out.mkdir(parents=True, exist_ok=True)
@@ -117,7 +126,7 @@ def main():
         raise ValueError('Batch size exceeds training sample count')
     summary_path = out / 'summary.csv'
     with summary_path.open('w', newline='') as summary_file:
-        fields = ['optimizer', 'lr', 'aux_lr', 'seeds', 'epochs', 'batch_size']
+        fields = ['arch', 'optimizer', 'lr', 'aux_lr', 'seeds', 'epochs', 'batch_size']
         for metric in ['train_s0', 'train_s1', 'test_s0', 'test_s1']:
             fields += [metric + '_mean', metric + '_std']
         writer = csv.DictWriter(summary_file, fieldnames=fields)
@@ -130,7 +139,7 @@ def main():
                 for run_index, seed in enumerate(args.seeds):
                     train, train_eval, test, num_features, cards = datasets[seed]
                     set_seed(seed)
-                    model = MLPWrapper(num_features, cards).to(config.DEVICE)
+                    model = model_class(num_features, cards).to(config.DEVICE)
                     config.initialize_weights(model, num_classes=2)
                     optimizers = make_optimizers(name, model, lr, aux_lr)
                     schedulers = [CosineAnnealingLR(opt, T_max=args.epochs) for opt in optimizers]
@@ -142,10 +151,10 @@ def main():
                     print(json.dumps(details), flush=True)
                     history = train_and_track(
                         model, optimizers, schedulers, train, train_eval, test, config.DEVICE,
-                        args.epochs, False, 'covertype', 'mlp', name, run_index, seed, recorder)
+                        args.epochs, False, 'covertype', args.arch, name, run_index, seed, recorder)
                     results.append({key: history[key][-1] for key in history})
                     del model, optimizers, schedulers
-                row = dict(optimizer=name, lr=lr, aux_lr=aux_lr, seeds=','.join(map(str, args.seeds)),
+                row = dict(arch=args.arch, optimizer=name, lr=lr, aux_lr=aux_lr, seeds=','.join(map(str, args.seeds)),
                            epochs=args.epochs, batch_size=args.batch_size)
                 for metric in ['train_s0', 'train_s1', 'test_s0', 'test_s1']:
                     values = [r[metric] for r in results]
