@@ -12,6 +12,12 @@ import math
 from pathlib import Path
 import statistics
 
+# Must be set BEFORE importing torch (including imports through config/models).
+# Use precompiled PyTorch kernels instead of native JIT DSL overrides.
+# Avoids Triton compiling cuda_utils.c, which requires system Python.h headers.
+import os
+os.environ['TORCH_DISABLE_NATIVE_JIT'] = '1'
+
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
@@ -113,12 +119,14 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     (out / 'experiment_settings.json').write_text(json.dumps({
         **vars(args), 'output_dir': str(out), 'device': str(config.DEVICE),
+        'native_jit_disabled': True,
         'no_momentum': True, 'schedule': 'cosine, T_max=epochs, eta_min=0',
         'group_definition': 'S0: other samples; S1: designated minority cover type',
         'muon_aux_rule': 'auxiliary_lr = muon_lr * muon_aux_ratio',
         'total_runs': 2 * sum(len(rates[name]) for name in args.optimizers),
     }, indent=2))
     print(f'Output directory: {out.resolve()}', flush=True)
+    print('Native JIT disabled: using precompiled PyTorch kernels. Device:', config.DEVICE, flush=True)
     print('All momentum and both AdamW betas are zero. Exactly two seeds per configuration.', flush=True)
     # Cache each seed's loaders once; shuffle and dropout RNG are reset for every run.
     datasets = {seed: get_covertype_dataloaders(args.batch_size, seed) for seed in args.seeds}
