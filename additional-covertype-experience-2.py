@@ -1,6 +1,6 @@
 """Additional Covertype experiments (second sweep); add this file beside the existing main.py.
 
-Defaults: SGD LR=0.2; AdamW LR=0.003 and 0.01, each with seeds 42 and 43.
+Defaults: AdamW LR=0.002 and 0.005, each with seeds 42 and 43.
 Uses the same model initialization and training pipeline as the first sweep.
 No existing repository files or config values are modified. No automatic selection
 on test results: summary.csv reports every configuration for comparison.
@@ -29,8 +29,7 @@ from utils.storage import ExperimentRecorder
 from utils.trainer import train_and_track
 
 DEFAULT_LRS = {
-    'SGD': [2e-1],
-    'AdamW': [3e-3, 1e-2],
+    'AdamW': [2e-3, 5e-3],
 }
 
 
@@ -71,10 +70,9 @@ def main():
     parser.add_argument('--seeds', type=int, nargs=2, default=[42, 43], metavar=('SEED1', 'SEED2'))
     parser.add_argument('--optimizers', nargs='+', choices=list(DEFAULT_LRS), default=list(DEFAULT_LRS))
     parser.add_argument('--adam_lrs', type=float, nargs='+', default=DEFAULT_LRS['AdamW'])
-    parser.add_argument('--sgd_lrs', type=float, nargs='+', default=DEFAULT_LRS['SGD'])
     parser.add_argument('--output_dir', default=None)
     args = parser.parse_args()
-    rates = {'SGD': args.sgd_lrs, 'AdamW': args.adam_lrs}
+    rates = {'AdamW': args.adam_lrs}
     if args.epochs < 1 or args.batch_size < 1 or len(set(args.seeds)) != 2:
         parser.error('Use positive epochs/batch size and exactly two distinct seeds')
     if len(set(args.optimizers)) != len(args.optimizers):
