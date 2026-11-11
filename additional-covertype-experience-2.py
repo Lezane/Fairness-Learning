@@ -1,7 +1,7 @@
 """Additional Covertype experiments (second sweep); add this file beside the existing main.py.
 
-Defaults: AdamW LR=0.002 and 0.005, each with seeds 42 and 43.
-Uses the same model initialization and training pipeline as the first sweep.
+Defaults: AdamW LR=0.002 and 0.005; Muon LR=0.05 and 0.1.
+Each configuration runs with exactly two seeds (42 and 43 by default).
 No existing repository files or config values are modified. No automatic selection
 on test results: summary.csv reports every configuration for comparison.
 """
@@ -24,12 +24,14 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 import config
 from data.covertype import get_covertype_dataloaders
+from optimizers.muon import Muon
 from utils.seed import set_seed
 from utils.storage import ExperimentRecorder
 from utils.trainer import train_and_track
 
 DEFAULT_LRS = {
     'AdamW': [2e-3, 5e-3],
+    'Muon': [5e-2, 1e-1],
 }
 
 
@@ -43,6 +45,23 @@ def make_optimizers(name, model, lr, aux_lr):
         optimizers = [torch.optim.SGD(
             model.parameters(), lr=lr, momentum=0.0, nesterov=False,
             weight_decay=config.SGD_WEIGHT_DECAY)]
+    elif name == 'Muon':
+        # Internal Linear weights use Muon, following the repository factory rule.
+        # All remaining parameters use auxiliary AdamW, including rtdl tokenizer
+        # and CLS parameters that are not ordinary nn.Embedding modules.
+        hidden = [
+            module.weight for module_name, module in model.named_modules()
+            if isinstance(module, torch.nn.Linear)
+            and module.weight is not None
+            and 'head' not in module_name and 'classifier' not in module_name
+        ]
+        hidden_ids = {id(p) for p in hidden}
+        auxiliary = [p for p in model.parameters() if id(p) not in hidden_ids]
+        optimizers = [
+            Muon(hidden, lr=lr, momentum=0.0, nesterov=False),
+            torch.optim.AdamW(auxiliary, lr=aux_lr, betas=(0.0, 0.0),
+                              eps=config.ADAM_EPS, weight_decay=config.MUON_ADAMW_WD),
+        ]
     else:
         raise ValueError(name)
     assigned = []
@@ -70,9 +89,12 @@ def main():
     parser.add_argument('--seeds', type=int, nargs=2, default=[42, 43], metavar=('SEED1', 'SEED2'))
     parser.add_argument('--optimizers', nargs='+', choices=list(DEFAULT_LRS), default=list(DEFAULT_LRS))
     parser.add_argument('--adam_lrs', type=float, nargs='+', default=DEFAULT_LRS['AdamW'])
+    parser.add_argument('--muon_lrs', type=float, nargs='+', default=DEFAULT_LRS['Muon'])
+    parser.add_argument('--muon_aux_ratio', type=float, default=0.05,
+                        help='Auxiliary AdamW LR = ratio * Muon LR (default: 0.05).')
     parser.add_argument('--output_dir', default=None)
     args = parser.parse_args()
-    rates = {'AdamW': args.adam_lrs}
+    rates = {'AdamW': args.adam_lrs, 'Muon': args.muon_lrs}
     if args.epochs < 1 or args.batch_size < 1 or len(set(args.seeds)) != 2:
         parser.error('Use positive epochs/batch size and exactly two distinct seeds')
     if len(set(args.optimizers)) != len(args.optimizers):
@@ -83,6 +105,8 @@ def main():
             parser.error(f'{name}: provide 1 to 5 distinct learning rates')
         if any(not math.isfinite(v) or v <= 0 for v in values):
             parser.error('Learning rates must be finite and positive')
+    if not math.isfinite(args.muon_aux_ratio) or args.muon_aux_ratio <= 0:
+        parser.error('Muon auxiliary ratio must be finite and positive')
 
     # Reuse the actual repository model without altering its architecture.
     from models.tabular import MLPWrapper, FTTransformerWrapper
@@ -97,6 +121,7 @@ def main():
         'native_jit_disabled': True,
         'no_momentum': True, 'schedule': 'cosine, T_max=epochs, eta_min=0',
         'group_definition': 'S0: other samples; S1: designated minority cover type',
+        'muon_aux_rule': 'auxiliary_lr = muon_lr * muon_aux_ratio',
         'total_runs': 2 * sum(len(rates[name]) for name in args.optimizers),
     }, indent=2))
     print(f'Output directory: {out.resolve()}', flush=True)
@@ -115,7 +140,7 @@ def main():
         writer.writeheader()
         for name in args.optimizers:
             for trial, lr in enumerate(rates[name], 1):
-                aux_lr = None
+                aux_lr = lr * args.muon_aux_ratio if name == 'Muon' else None
                 trial_dir = out / f'{name}_{trial}_lr_{lr:g}'
                 results = []
                 for run_index, seed in enumerate(args.seeds):
